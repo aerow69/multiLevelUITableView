@@ -24,7 +24,7 @@ NSString *const keyChildren = @"children";
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    self.navigationItem.leftBarButtonItem = self.editButtonItem;
+//    self.navigationItem.leftBarButtonItem = self.editButtonItem;
 
 
     self.detailViewController = (DetailViewController *)[[self.splitViewController.viewControllers lastObject] topViewController];
@@ -290,7 +290,6 @@ NSString *const keyChildren = @"children";
                       },
                   ];
     
-    //    çƒ√ = [NSMutableArray new];objects
     _objects = dataArray.mutableCopy;
 }
 
@@ -336,7 +335,12 @@ NSString *const keyChildren = @"children";
     
     cell.indentationWidth = 20;
     cell.indentationLevel = [_objects[indexPath.row][keyIndent] integerValue];
-    return cell;
+
+    
+    cell.contentView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:(CGFloat)(cell.indentationLevel)/50.0];
+
+    
+    
     return cell;
 }
 
@@ -350,7 +354,6 @@ NSString *const keyChildren = @"children";
     BOOL indentChek = [indentArray containsObject:[NSNumber numberWithInteger:indentLevel]];
     BOOL isAlreadyInserted = [_objects containsObject:dic[keyChildren] ];
     
-    //    BOOL isAlreadyInserted=NO;
     
     for(NSDictionary *dicChildren in dic[keyChildren]){
         
@@ -361,6 +364,7 @@ NSString *const keyChildren = @"children";
         if(isAlreadyInserted) break;
         
     }
+    
     if ( indentChek &&  isAlreadyInserted) {
         
         [self miniMizeThisRows:_objects[indexPath.row][keyChildren] forTable:tableView withIndexpath:indexPath];
@@ -391,16 +395,17 @@ NSString *const keyChildren = @"children";
     
 }
 -(void)miniMizeThisRows:(NSArray*)ar forTable:(UITableView *)tableView withIndexpath:(NSIndexPath *)indexPath{
-    for(NSDictionary *dInner in ar ) {
-        NSUInteger indexToRemove=[_objects indexOfObjectIdenticalTo:dInner];
+    
+    for(NSDictionary *dicChildren in ar ) {
+        NSUInteger indexToRemove=[_objects indexOfObjectIdenticalTo:dicChildren];
         
-        NSArray *arInner=[dInner valueForKey:keyChildren];
+        NSArray *arrayChildren=[dicChildren valueForKey:keyChildren];
         
-        if(arInner && [arInner count]>0){
-            [self miniMizeThisRows:arInner forTable:tableView withIndexpath:indexPath];
+        if(arrayChildren && [arrayChildren count]>0){
+            [self miniMizeThisRows:arrayChildren forTable:tableView withIndexpath:indexPath];
         }
-        if([_objects indexOfObjectIdenticalTo:dInner]!=NSNotFound) {
-            [_objects removeObjectIdenticalTo:dInner];
+        if([_objects indexOfObjectIdenticalTo:dicChildren]!=NSNotFound) {
+            [_objects removeObjectIdenticalTo:dicChildren];
             [tableView deleteRowsAtIndexPaths:
              [NSArray arrayWithObject:[NSIndexPath indexPathForRow:indexToRemove inSection:indexPath.section]]
                              withRowAnimation:UITableViewRowAnimationRight];
