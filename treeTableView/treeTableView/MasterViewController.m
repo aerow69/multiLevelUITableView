@@ -318,7 +318,7 @@ NSString *const keyChildren = @"children";
     }
 }
 
-#pragma mark - Table View
+#pragma mark - Table View DataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
@@ -343,33 +343,36 @@ NSString *const keyChildren = @"children";
     
     return cell;
 }
-
+#pragma mark - Table View Delegate
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     
     NSDictionary *dic = _objects[indexPath.row];
     
-    NSInteger indentLevel = [_objects[indexPath.row][keyIndent] integerValue];
-    NSArray *indentArray = [_objects valueForKey:keyIndent];
+    NSInteger indentLevel = [_objects[indexPath.row][keyIndent] integerValue]; //indentLevel of the selected cell
+    NSArray *indentArray = [_objects valueForKey:keyIndent]; //array of indents which are currently show on table
     
-    BOOL indentChek = [indentArray containsObject:[NSNumber numberWithInteger:indentLevel]];
-    BOOL isAlreadyInserted = [_objects containsObject:dic[keyChildren] ];
+    BOOL indentChek = [indentArray containsObject:[NSNumber numberWithInteger:indentLevel]]; // check if  selected
+    BOOL isChildrenAlreadyInserted = [_objects containsObject:dic[keyChildren]]; //checking contains children
     
     
     for(NSDictionary *dicChildren in dic[keyChildren]){
         
         NSInteger index=[_objects indexOfObjectIdenticalTo:dicChildren];
         
-        isAlreadyInserted=(index>0 && index!=NSIntegerMax);
+        isChildrenAlreadyInserted=(index>0 && index!=NSIntegerMax); //checking contains children
         
-        if(isAlreadyInserted) break;
+        if(isChildrenAlreadyInserted) break;
         
     }
     
-    if ( indentChek &&  isAlreadyInserted) {
+    
+    if ( indentChek &&  isChildrenAlreadyInserted) {
         
+        //all children from this category will be deleted
         [self miniMizeThisRows:_objects[indexPath.row][keyChildren] forTable:tableView withIndexpath:indexPath];
+        
     }
-    else if ([dic[keyChildren] count]) {
+    else if ([dic[keyChildren] count]) { //insert the children if contains
         
         NSMutableArray *ipsArray = [NSMutableArray new];
         NSArray *childArray = dic[keyChildren];
@@ -388,27 +391,36 @@ NSString *const keyChildren = @"children";
         [self.tableView insertRowsAtIndexPaths:ipsArray withRowAnimation:UITableViewRowAnimationLeft];
         [self.tableView endUpdates];
         
-    }else{
+        
+    }else{ //the junior most children will navigate
+        
         [self performSegueWithIdentifier:@"showDetail" sender:indexPath];
     }
     
     
 }
+
+/*this method will check the category with its children, sub children and so on till the last indent occurs*/
+//method to minimize all the child rows of that particular category
 -(void)miniMizeThisRows:(NSArray*)ar forTable:(UITableView *)tableView withIndexpath:(NSIndexPath *)indexPath{
     
     for(NSDictionary *dicChildren in ar ) {
+        
         NSUInteger indexToRemove=[_objects indexOfObjectIdenticalTo:dicChildren];
         
         NSArray *arrayChildren=[dicChildren valueForKey:keyChildren];
         
         if(arrayChildren && [arrayChildren count]>0){
-            [self miniMizeThisRows:arrayChildren forTable:tableView withIndexpath:indexPath];
+            [self miniMizeThisRows:arrayChildren forTable:tableView withIndexpath:indexPath];//calling self method to remove  the childrens
         }
+        
         if([_objects indexOfObjectIdenticalTo:dicChildren]!=NSNotFound) {
+            
+            //updating array
             [_objects removeObjectIdenticalTo:dicChildren];
-            [tableView deleteRowsAtIndexPaths:
-             [NSArray arrayWithObject:[NSIndexPath indexPathForRow:indexToRemove inSection:indexPath.section]]
-                             withRowAnimation:UITableViewRowAnimationRight];
+            
+            //deleting the row
+            [tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:indexToRemove inSection:indexPath.section]] withRowAnimation:UITableViewRowAnimationRight];
         }
     }
 }
